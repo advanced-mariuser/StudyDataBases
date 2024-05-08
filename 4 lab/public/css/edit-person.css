@@ -1,0 +1,248 @@
+.body-wrapper {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    font-family: Rubik;
+}
+
+.edit-person {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #d2effd;
+    height: 95%;
+    width: 90%;
+    border-radius: 20px;
+    border: 3px solid #2848b6;
+}
+
+.edit-person__header {
+    margin: 0;
+    height: 50px;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    background-color: #2848b6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+    color: whitesmoke;
+}
+
+.edit-person__form {
+    margin-top: 30px;
+    height: 80%;
+    width: 90%;
+    background-color: white;
+    border-radius: 20px;
+    border: 3px solid #2848b6;
+    overflow: hidden;
+    display: flex;
+}
+
+.fields-wrapper {
+    display: table;
+    width: 80%;
+    overflow: hidden;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    position: absolute;
+    top: 75%;
+    left: 71%;
+}
+
+.link {
+    width: 120px;
+    height: 40px;
+    cursor: pointer;
+    margin: 40px 0 40px;
+}
+
+.button {
+    text-decoration: none;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    height: 40px;
+    margin: 40px 5% 40px;
+    cursor: pointer;
+    border: none;
+    background-color: #34d0ab;
+    border-radius: 20px;
+    font-family: Rubik;
+    transition: all 0.5s ease;
+}
+
+.button:hover {
+    background-color: #22725b;
+    color: whitesmoke;
+}
+
+.delete {
+    text-decoration: none;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0 40px;
+    width: 120px;
+    height: 40px;
+    cursor: pointer;
+    border: none;
+    background-color: #f5786a;
+    border-radius: 20px;
+    font-family: Rubik;
+    transition: all 0.5s ease;
+}
+
+.delete:hover {
+    background-color: #793a34;
+    color: whitesmoke;
+}
+
+.field {
+    display: flex;
+    align-items: center;
+    margin-top: 40px;
+    margin-left: 5%;
+    margin-right: 5%;
+    float: left
+}
+
+.field > label {
+    height: 42px;
+    display: flex;
+    align-items: center;
+    width: 10rem;
+}
+
+.field > input {
+    width: 5rem;
+    height: 30px;
+    font-size: 13px;
+    padding: 6px 0 6px 10px;
+    border: 1px solid #cecece;
+    background: #F6F6f6;
+    border-radius: 30px;
+    font-family: Rubik;
+    flex: auto;
+}
+
+#first-name {
+    flex: none;
+    width: 20rem;
+}
+
+#last-name {
+    flex: none;
+    width: 20rem;
+}
+
+#phone {
+    flex: none;
+    width: 9rem;
+}
+
+.data {
+    color: #606060;
+}
+
+.table-wrapper {
+    height: 75%;
+    width: 90%;
+    border-radius: 20px;
+    border: 2px solid #2848b6;
+    overflow-x: auto;
+    margin-top: 2%;
+}
+
+.table-wrapper table {
+    width: 100%;
+    table-layout: fixed;
+    border: none;
+    border-collapse: collapse;
+    background: whitesmoke;
+}
+
+.table-wrapper thead th {
+    font-weight: bold;
+    text-align: center;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    background-color: #b9b9d5;
+    border-left: 2px solid #2848b6;
+    border-right: 2px solid #2848b6;
+    border-bottom: 2px solid #2848b6;
+}
+
+.table-wrapper tbody td {
+    text-align: center;
+    padding: 10px 15px;
+    font-size: 14px;
+    vertical-align: top;
+    border-left: 1px solid #2848b6;
+    border-right: 1px solid #2848b6;
+    border-bottom: 1px solid #2848b6;
+    cursor: pointer;
+}
+
+.table-wrapper tbody tr {
+    transition: all 0.1s ease;
+}
+
+.table-wrapper tbody tr:hover {
+    color: whitesmoke;
+    background-color: #2848b6;
+}
+
+.table-wrapper tbody tr:nth-child(even) {
+    background: #eaf3ff;
+    transition: all 0.1s ease;
+}
+
+.table-wrapper tbody tr:nth-child(even):hover {
+    color: whitesmoke;
+    background-color: #2848b6;
+}
+
+.first-name {
+    width: 20%;
+}
+
+.left {
+    width: 19px;
+}
+
+.item {
+    text-decoration: none;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 80px;
+    cursor: pointer;
+    border: 2px solid #2848b6;
+    margin-top: 5%;
+    margin-right: 40px;
+    background-color: #34d0ab;
+    border-radius: 0 10px 10px 0;
+    font-family: Rubik;
+    transition: all 0.5s ease;
+}
+
+.item:hover {
+    background-color: #22725b;
+    color: whitesmoke;
+    width: 40px;
+    margin-right: 30px;
+}

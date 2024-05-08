@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css"/>
+    {% block stylesheets %}
+    {% endblock %}
+    <link rel="icon" type="image/x-icon" href="/img/logo.png"/>
+</head>
+<body>
+<div class="loader"></div>
+<header class="header-wrapper">
+    <div class="header">
+        <img src="/img/logo.png" class="logo">
+        <p class="header__name">Мега Плампер</p>
+        <a class="header__home" href="/"><p>CRM</p></a>
+        {% for last_place in places %}
+            <p class="header__separator">  >  </p>
+            <a class="header__last" href="/{{ last_place.url }}"><p>{{ last_place.name }}</p></a>
+        {% endfor %}
+    </div>
+</header>
+{% block content %}
+{% endblock %}
+<script src="/js/script.js"></script>
+</body>
+</html>

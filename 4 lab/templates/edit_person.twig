@@ -1,0 +1,72 @@
+{% extends '_layout.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/edit-person.css"/>
+{% endblock %}
+
+{% set count_start = 1 %}
+
+{% block content %}
+    <form id="delete-form" action="/{{ person }}/delete?{{ person }}_id={{ person_id }}" method="POST"></form>
+    <div class="body-wrapper">
+        <div class="edit-person">
+            <p class="edit-person__header">{{ title }}</p>
+            <form method="POST" action="/{{ person }}/update?{{ person }}_id={{ person_id }}" class="edit-person__form">
+                <div class="fields-wrapper">
+                    <div class="field">
+                        <label for="first-name">Имя</label>
+                        <input id="first-name" name="first_name" placeholder="Введите имя" value="{{ first_name }}"
+                               onChange="{(e) => setInputValue(e.target.value)}"><br>
+                    </div>
+                    <div class="field">
+                        <label for="last-name">Фамилия</label>
+                        <input id="last-name" name="last_name" placeholder="Введите фамилию" value="{{ last_name }}"
+                               onChange="{(e) => setInputValue(e.target.value)}"><br>
+                    </div>
+                    <div class="field">
+                        <label for="phone">Телефон</label>
+                        <input id="phone" name="phone" type="tel" placeholder="+7(999)999-99-99" value="{{ phone }}"
+                               onChange="{(e) => setInputValue(e.target.value)}"><br>
+                    </div>
+                    <div class="field">
+                        <p class="data">Создан: {{ created_at | date('Y-m-d H:i:s') }}<br>Последнее
+                            изменение: {{ updated_at | date('Y-m-d H:i:s') }}</p><br>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th class="left"></th>
+                            <th class="first-name">Дата</th>
+                            <th class="second-name">Записи</th>
+                        </tr>
+                        </thead>
+                    </table>
+                    <div class="table-wrapper-body">
+                        <table>
+                            <tbody>
+                            {% for date_app, appointment_ids in list %}
+                                <tr>
+                                    <td class="left">{{ count_start }}</td>
+                                    <td class="first-name">{{ date_app | date('Y-m-d') }}</td>
+                                    {% for leaf in  appointment_ids %}<td class="second-name" onclick="window.location='/appointment/edit?appointment_id={{ leaf }}&{{ person }}_id={{ person_id }}';">{{ leaf }}</td>{% endfor %}
+                                </tr>
+                                {% set count_start = count_start + 1 %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <a class="item" href = '/appointment/new?{{ person }}_id={{ person_id }}'>+
+                </a>
+                <div class="buttons">
+                    <button class="button" type="submit">Обновить</button>
+                    {% if person  == "master" %}
+                    <button class="delete" type="button" onclick='document.getElementById("delete-form").submit();'>Удалить</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

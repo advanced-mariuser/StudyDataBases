@@ -1,0 +1,52 @@
+{% extends '_layout.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/edit-appointment.css"/>
+{% endblock %}
+
+{% block content %}
+    <form id="delete-form" action="/appointment/delete?appointment_id={{ appoinment_id }}" method="POST"
+          style="display:none;">
+    </form>
+    <div class="body-wrapper">
+        <div class="new-appointment">
+            <p class="new-appointment__header">{{ title }}</p>
+            <form method="POST" action="/appointment/update?appointment_id={{ appoinment_id }}" class="new-appointment__form">
+                <div class="field">
+                    <label for="master">Мастер</label>
+                    <select id="master" name="master">
+                        <option>Выберите мастера</option>
+                        {% if master_id %}
+                            <option selected value="{{ master_id }}">{{ master_full_name }}</option>
+                        {% endif %}
+                        {% for master in masters %}
+                            <option value="{{ master.id }}">{{ master.firstName }} {{ master.lastName }}</option>
+                        {% endfor %}
+                    </select>
+                    </ul>
+                </div>
+                <div class="field">
+                    <label for="client">Клиент</label>
+                    <select id="client" name="client">
+                        <option>Выберите клиента</option>
+                        {% if client_id %}
+                            <option selected value="{{ client_id }}">{{ client_full_name }}</option>
+                        {% endif %}
+                        {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.firstName }} {{ client.lastName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="date">Дата</label>
+                    <input id="date" name="phone" type="date" value="{{ dateValue|date('Y-m-d') }}"><br>
+                </div>
+                <div class="buttons">
+                    <button class="button" onclick='document.querySelector(".new-appointment__form").submit();'>Обновить
+                    </button>
+                    <button class="delete" onclick='document.getElementById("delete-form").submit();'>Удалить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends '_layout.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/new-person.css"/>
+{% endblock %}
+
+{% block content %}
+    <div class="body-wrapper">
+        <div class="new-person">
+            <p class="new-person__header">{{ title }}</p>
+            <form method="POST" action="/{{ person }}/create" class="new-person__form">
+                <div class="field">
+                    <label for="first-name">Имя</label>
+                    <input id="first-name" name="first_name" placeholder="Введите имя" ><br>
+                </div>
+                <div class="field">
+                    <label for="last-name">Фамилия</label>
+                    <input id="last-name" name="last_name" placeholder="Введите фамилию"><br>
+                </div>
+                <div class="field">
+                    <label for="phone">Телефон</label>
+                    <input id="phone" name="phone" type="tel" placeholder="+7(999)999-99-99"><br>
+                </div>
+                <button type="submit" class="button">Создать</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,117 @@
+.body-wrapper
+{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    font-family: Rubik;
+}
+
+.new-person
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #d2effd;
+    height: 90%;
+    width: 90%;
+    border-radius: 20px;
+    border: 3px solid #2848b6;
+}
+
+.new-person__header
+{
+    margin: 0;
+    height: 50px;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    background-color: #2848b6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+    color: whitesmoke;
+}
+
+.new-person__form
+{
+    margin-top: 30px;
+    height: 80%;
+    width: 90%;
+    background-color: white;
+    border-radius: 20px;
+    border: 3px solid #2848b6;
+    overflow: hidden;
+}
+
+.button
+{
+    text-decoration: none;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    height: 40px;
+    margin: 40px 5% 40px auto;
+    cursor: pointer;
+    border: none;
+    background-color: #34d0ab;
+    border-radius: 20px;
+    font-family: Rubik;
+    transition: all 0.5s ease;
+}
+
+.button:hover {
+    background-color: #22725b;
+    color: whitesmoke;
+}
+
+.field
+{
+    display: flex;
+    align-items: center;
+    margin-top: 40px;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.field > label
+{
+    height: 42px;
+    display: flex;
+    align-items: center;
+    width: 10rem;
+}
+
+.field > input
+{
+    width: 5rem;
+    height: 30px;
+    font-size: 13px;
+    padding: 6px 0 6px 10px;
+    border: 1px solid #cecece;
+    background: #F6F6f6;
+    border-radius: 30px;
+    font-family: Rubik;
+    flex: auto;
+}
+
+#first-name
+{
+    flex: none;
+    width: 20rem;
+}
+
+#last-name
+{
+    flex: none;
+    width: 30rem;
+}
+
+#phone
+{
+    flex: none;
+    width: 9rem;
+}

@@ -1,0 +1,41 @@
+{% extends '_layout.twig' %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="/css/list.css"/>
+{% endblock %}
+
+{% set count_start = 1 %}
+
+{% block content %}
+    <div class="body-wrapper">
+        <div class="lists">
+            <p class="lists__header">{{ title }}</p>
+            <a class="button" href="{{ person }}/new">Добавить</a>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                    <tr>
+                        <th style="width: 19px"></th>
+                        <th class="first-name">Имя</th>
+                        <th class="second-name">Фамилия</th>
+                    </tr>
+                    </thead>
+                </table>
+                <div class="table-wrapper-body">
+                    <table>
+                        <tbody>
+                        {% for leaf in list %}
+                            <tr onclick="window.location='/{{ person }}/edit?{{ person }}_id={{ leaf.id }}';">
+                                <td style="width: 20px">{{ count_start }}</td>
+                                <td>{{ leaf.firstName }}</td>
+                                <td>{{ leaf.lastName }}</td>
+                            </tr>
+                            {% set count_start = count_start + 1 %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
