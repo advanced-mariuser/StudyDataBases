@@ -3,17 +3,45 @@ declare(strict_types=1);
 
 namespace App\Model;
 
-readonly class Client
+use DateTimeImmutable;
+class Client
 {
+    private ?int $id;
+    private string $firstName;
+    private string $lastName;
+    private string $phone;
+    private ?DateTimeImmutable $createdAt;
+    private ?DateTimeImmutable $updatedAt;
+
     public function __construct(
-        private int $id,
-        private string $firstName,
-        private string $lastName,
-        private string $phone,
-        private \DateTimeImmutable $createdAt,
-        private \DateTimeImmutable $updatedAt,
+        ?int $id,
+        string $firstName,
+        string $lastName,
+        string $phone,
+        ?DateTimeImmutable $createdAt = new DateTimeImmutable('now'),
+        ?DateTimeImmutable $updatedAt = new DateTimeImmutable('now')
     )
     {
+        $this->id = $id;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->phone = $phone;
+        $this->createdAt = $createdAt;
+        $this->updatedAt = $updatedAt;
+    }
+
+    public function assignIdentifier(int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function edit(string $firstName, string $lastName, string $phone): void
+    {
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+        $this->phone = $phone;
+
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -36,13 +64,18 @@ readonly class Client
         return $this->phone;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getUpdatedAt(): \DateTimeImmutable
+    public function getUpdatedAt(): ?DateTimeImmutable
     {
         return $this->updatedAt;
+    }
+
+    public function getFullName(): string
+    {
+        return $this->firstName . ' ' . $this->lastName;
     }
 }

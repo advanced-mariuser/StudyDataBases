@@ -18,7 +18,9 @@ abstract class AbstractController
 
     public function __construct()
     {
-        $this->twig = new Environment(new FilesystemLoader('..\templates'));
+        $isProduction = getenv('APP_ENV') === 'prod';
+        $path = $isProduction ? '..\templates' : '..\..\templates';
+        $this->twig = new Environment(new FilesystemLoader($path));
     }
 
     protected function isGet(ServerRequestInterface $request): bool

@@ -3,17 +3,38 @@ declare(strict_types=1);
 
 namespace App\Model;
 
-readonly class Appointment
+use DateTimeImmutable;
+
+class Appointment
 {
+    private ?int $id;
+    private int $masterId;
+    private int $clientId;
+    private DateTimeImmutable $date;
+
     public function __construct(
-        private int $id,
-        private ?int $masterId,
-        private ?int $clientId,
-        private \DateTimeImmutable $date,
-        private ?\DateTimeImmutable $createdAt,
-        private ?\DateTimeImmutable $updatedAt,
+        ?int $id,
+        int $masterId,
+        int $clientId,
+        DateTimeImmutable $date,
     )
     {
+        $this->id = $id;
+        $this->masterId = $masterId;
+        $this->clientId = $clientId;
+        $this->date = $date;
+    }
+
+    public function assignIdentifier(int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function edit(int $masterId, int $clientId, DateTimeImmutable $date): void
+    {
+        $this->masterId = $masterId;
+        $this->clientId = $clientId;
+        $this->date = $date;
     }
 
     public function getId(): ?int
@@ -21,28 +42,18 @@ readonly class Appointment
         return $this->id;
     }
 
-    public function getMasterId(): ?int
+    public function getMasterId(): int
     {
         return $this->masterId;
     }
 
-    public function getClientId(): ?int
+    public function getClientId(): int
     {
         return $this->clientId;
     }
 
-    public function getDate(): \DateTimeImmutable
+    public function getDate(): DateTimeImmutable
     {
         return $this->date;
-    }
-
-    public function getCreatedAt(): ?\DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function getUpdatedAt(): ?\DateTimeImmutable
-    {
-        return $this->updatedAt;
     }
 }

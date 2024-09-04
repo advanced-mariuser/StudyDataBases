@@ -3,10 +3,17 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Database\AppointmentTable;
-use App\Database\ClientTable;
+use App\Database\AppointmentRepository;
+use App\Database\Client\ClientRepository;
 use App\Database\ConnectionProvider;
-use App\Database\MasterTable;
+use App\Database\MasterRepository;
+use App\Model\Appointment;
+use App\Model\Data\Appointment\CreateAppointmentParams;
+use App\Model\Data\Client\CreateClientParams;
+use App\Model\Service\Appointment\AppointmentServiceProvider;
+use App\Model\Service\Client\ClientServiceProvider;
+use App\Model\Service\Master\MasterServiceProvider;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Twig\Error\LoaderError;
@@ -15,19 +22,6 @@ use Twig\Error\SyntaxError;
 
 class AppointmentsController extends AbstractController
 {
-    private AppointmentTable $appointmentTable;
-    private MasterTable $masterTable;
-    private ClientTable $clientTable;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $connection = ConnectionProvider::connectDatabase();
-        $this->clientTable = new ClientTable($connection);
-        $this->masterTable = new MasterTable($connection);
-        $this->appointmentTable = new AppointmentTable($connection);
-    }
-
     /**
      * @throws SyntaxError
      * @throws RuntimeError
@@ -43,38 +37,52 @@ class AppointmentsController extends AbstractController
         $clientId = $queryParams['client_id'] ?? null;
         $masterId = $queryParams['master_id'] ?? null;
 
-        $masterFullName = null;
-        $clientFullName = null;
+        if ((is_null($masterId) && is_null($clientId))) {
+            return $this->badRequest($response);
+        }
 
         if (!is_null($clientId)) {
-            $client = $this->clientTable->findClient((int)$clientId);
-            $clientFullName = $client->getFirstName() . ' ' . $client->getLastName();
-            $lastPlaceList[] = ['url' => 'clients', 'name' => 'Список клиентов'];
-            $lastPlaceList[] = ['url' => "client/edit?client_id=$clientId", 'name' => 'Клиент'];
+            $client = ClientServiceProvider::getInstance()->getClientService()->getClient((int)$clientId);
+            if (is_null($client)) {
+                return $this->badRequest($response);
+            }
+
+            $bradCrumb = [
+                ['url' => 'clients', 'title' => 'Список клиентов'],
+                ['url' => "client/edit?client_id={$client->getId()}", 'title' => 'Клиент'],
+                ['url' => "appointment/new?client_id={$client->getId()}", 'title' => 'Новая запись']
+            ];
         }
         if (!is_null($masterId)) {
-            $master = $this->masterTable->findMaster((int)$masterId);
-            $masterFullName = $master->getFirstName() . ' ' . $master->getLastName();
-            $lastPlaceList[] = ['url' => 'masters', 'name' => 'Список мастеров'];
-            $lastPlaceList[] = ['url' => "master/edit?master_id=$masterId", 'name' => 'Мастер'];
+            $master = MasterServiceProvider::getInstance()->getMasterService()->getMaster((int)$masterId);
+            if (is_null($master)) {
+                return $this->badRequest($response);
+            }
+
+            $bradCrumb = [
+                ['url' => 'masters', 'title' => 'Список мастеров'],
+                ['url' => "master/edit?master_id={$master->getId()}", 'title' => 'Мастер'],
+                ['url' => "appointment/new?master_id={$master->getId()}", 'title' => 'Новая запись']
+            ];
         }
 
-        $clients = $this->clientTable->getAllClients();
-        $masters = $this->masterTable->getAllMasters();
+        $clients = ClientServiceProvider::getInstance()->getClientQueryService()->listClients();
+        $masters = MasterServiceProvider::getInstance()->getMasterQueryService()->listMasters();
 
         $body = $this->twig->render('new_appointment.twig', [
-            'places' => $lastPlaceList,
+            'bradCrumb' => $bradCrumb,
             'title' => 'Новая запись',
             'master_id' => $masterId,
-            'master_full_name' => $masterFullName ?? null,
             'client_id' => $clientId,
-            'client_full_name' => $clientFullName ?? null,
             'masters' => $masters,
             'clients' => $clients,
         ]);
         return $this->success($response, $body);
     }
 
+    /**
+     * @throws Exception
+     */
     public function createAppointment(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isPost($request)) {
@@ -82,9 +90,14 @@ class AppointmentsController extends AbstractController
         }
 
         $parsedFields = $request->getParsedBody();
-        $appointmentId = $this->appointmentTable->createAppointment((int) $parsedFields['client'],(int) $parsedFields['master'], new \DateTimeImmutable($parsedFields['date']));
-        $body = "/appointment/edit?appointment_id=$appointmentId";
+        $params = new CreateAppointmentParams(
+            (int)$parsedFields['master'],
+            (int)$parsedFields['client'],
+            new \DateTimeImmutable($parsedFields['date']));
+        $appointmentId = AppointmentServiceProvider::getInstance()->getAppointmentService()->createAppointment($params);
 
+        $maseterId = (int)$parsedFields['master'];
+        $body = "/appointment/edit?appointment_id=$appointmentId&master_id=$maseterId";
         return $this->redirect($response, $body);
     }
 
@@ -101,48 +114,51 @@ class AppointmentsController extends AbstractController
 
         $queryParams = $request->getQueryParams();
         $appointmentId = $queryParams['appointment_id'] ?? null;
-        $master = $queryParams['master_id'] ?? null;
-        $client = $queryParams['client_id'] ?? null;
-        if($master)
-        {
-            $id = $queryParams['master_id'];
-            $lastPlaceList[] = ['url' => 'masters', 'name' => 'Список мастеров'];
-            $lastPlaceList[] = ['url' => "master/edit?master_id=$id", 'name' => 'Мастер'];
+        $masterId = $queryParams['master_id'] ?? null;
+        $clientId = $queryParams['client_id'] ?? null;
+
+        if (is_null($masterId) && is_null($clientId) && is_null($appointmentId)) {
+            return $this->badRequest($response);
         }
-        elseif ($client)
-        {
-            $id = $queryParams['client_id'];
-            $lastPlaceList[] = ['url' => 'clients', 'name' => 'Список клиентов'];
-            $lastPlaceList[] = ['url' => "client/edit?client_id=$id", 'name' => 'Клиент'];
+
+        if ($masterId) {
+            $master = MasterServiceProvider::getInstance()->getMasterService()->getMaster((int)$masterId);
+            if (is_null($master)) {
+                return $this->badRequest($response);
+            }
+
+            $bradCrumb = [
+                ['url' => 'masters', 'title' => 'Список мастеров'],
+                ['url' => "master/edit?master_id={$master->getId()}", 'title' => 'Мастер'],
+                ['url' => "appointment/edit?appointment_id=$appointmentId&master_id={$master->getId()}", 'title' => 'Запись']
+            ];
+        } elseif ($clientId) {
+            $client = ClientServiceProvider::getInstance()->getClientService()->getClient((int)$clientId);
+            if (is_null($client)) {
+                return $this->badRequest($response);
+            }
+
+            $bradCrumb = [
+                ['url' => 'clients', 'title' => 'Список клиентов'],
+                ['url' => "client/edit?client_id={$client->getId()}", 'title' => 'Клиент'],
+                ['url' => "appointment/edit?appointment_id=$appointmentId&client_id={$client->getId()}", 'title' => 'Запись']
+            ];
         }
 
         if (is_null($appointmentId)) {
             return $this->badRequest($response);
         }
 
-        $appointment = $this->appointmentTable->findAppointment((int)$appointmentId);
-        $clients = $this->clientTable->getAllClients();
-        $masters = $this->masterTable->getAllMasters();
-
-        $client = $this->clientTable->findClient($appointment->getClientId());
-        if($client)
-        {
-            $clientFullName = $client->getFirstName() . ' ' . $client->getLastName();
-        }
-        $master = $this->masterTable->findMaster((int)$appointment->getMasterId());
-        if($master)
-        {
-            $masterFullName = $master->getFirstName() . ' ' . $master->getLastName();
-        }
+        $appointment = AppointmentServiceProvider::getInstance()->getAppointmentService()->getAppointment((int)$appointmentId);
+        $clients = ClientServiceProvider::getInstance()->getClientQueryService()->listClients();
+        $masters = MasterServiceProvider::getInstance()->getMasterQueryService()->listMasters();
 
         $body = $this->twig->render('edit_appoinment.twig', [
+            'bradCrumb' => $bradCrumb,
             'appoinment_id' => $appointmentId,
-            'places' => $lastPlaceList ?? null,
             'title' => 'Запись',
             'master_id' => $appointment->getMasterId(),
-            'master_full_name' => $masterFullName ?? null,
             'client_id' => $appointment->getClientId(),
-            'client_full_name' => $clientFullName ?? null,
             'masters' => $masters,
             'clients' => $clients,
             'dateValue' => $appointment->getDate(),
@@ -150,6 +166,9 @@ class AppointmentsController extends AbstractController
         return $this->success($response, $body);
     }
 
+    /**
+     * @throws Exception
+     */
     public function updateAppointment(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isPost($request)) {
@@ -164,10 +183,16 @@ class AppointmentsController extends AbstractController
         }
 
         $parsedFields = $request->getParsedBody();
+        $editedAppointment = $this->appointmentRepository->findAppointmentById((int)$appointmentId);
 
-        $this->appointmentTable->editAppointment((int)$appointmentId, (int) $parsedFields['client'],(int) $parsedFields['master'], new \DateTimeImmutable($parsedFields['phone']));
-        $body = "/appointment/edit?appointment_id=$appointmentId";
+        if (is_null($editedAppointment)) {
+            return $this->badRequest($response);
+        }
 
+        $editedAppointment->edit((int)$parsedFields['master'], (int)$parsedFields['client'], new \DateTimeImmutable($parsedFields['date']));
+        $this->appointmentRepository->editAppointment($editedAppointment);
+
+        $body = "/appointment/edit?appointment_id=$appointmentId&master_id={$editedAppointment->getMasterId()}&client_id={$editedAppointment->getClientId()}";
         return $this->redirect($response, $body);
     }
 
@@ -184,11 +209,17 @@ class AppointmentsController extends AbstractController
             return $this->badRequest($response);
         }
 
-        if (!$this->appointmentTable->deleteAppointment((int)$appointmentId)) {
+        $appointment = $this->appointmentRepository->findAppointmentById((int)$appointmentId);
+
+        if (is_null($appointment)) {
             return $this->badRequest($response);
         }
-        $body = "/clients";
 
+        if (!$this->appointmentRepository->deleteAppointment($appointment)) {
+            return $this->badRequest($response);
+        }
+
+        $body = "/clients";
         return $this->redirect($response, $body);
     }
 }

@@ -46,11 +46,11 @@
                     <div class="table-wrapper-body">
                         <table>
                             <tbody>
-                            {% for date_app, appointment_ids in list %}
+                            {% for appointmentSummary in list %}
                                 <tr>
                                     <td class="left">{{ count_start }}</td>
-                                    <td class="first-name">{{ date_app | date('Y-m-d') }}</td>
-                                    {% for leaf in  appointment_ids %}<td class="second-name" onclick="window.location='/appointment/edit?appointment_id={{ leaf }}&{{ person }}_id={{ person_id }}';">{{ leaf }}</td>{% endfor %}
+                                    <td class="first-name">{{ appointmentSummary.date | date('Y-m-d') }}</td>
+                                    {% for leaf in  appointmentSummary.ids %}<td class="second-name" onclick="window.location='/appointment/edit?appointment_id={{ leaf }}&{{ person }}_id={{ person_id }}';">{{ leaf }}</td>{% endfor %}
                                 </tr>
                                 {% set count_start = count_start + 1 %}
                             {% endfor %}

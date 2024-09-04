@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Database\AppointmentTable;
-use App\Database\ConnectionProvider;
-use App\Database\MasterTable;
+use App\Model\Data\Master\CreateMasterParams;
+use App\Model\Data\Master\EditMasterParams;
+use App\Model\Service\Appointment\AppointmentServiceProvider;
+use App\Model\Service\Master\MasterServiceProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Twig\Error\LoaderError;
@@ -14,17 +15,6 @@ use Twig\Error\SyntaxError;
 
 class MastersController extends AbstractController
 {
-    private MasterTable $masterTable;
-    private AppointmentTable $appointmentTable;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $connection = ConnectionProvider::connectDatabase();
-        $this->masterTable = new MasterTable($connection);
-        $this->appointmentTable = new AppointmentTable($connection);
-    }
-
     /**
      * @throws RuntimeError
      * @throws SyntaxError
@@ -35,9 +25,14 @@ class MastersController extends AbstractController
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
         }
-        $mastersList = $this->masterTable->getAllMasters();
+
+        $mastersList = MasterServiceProvider::getInstance()->getMasterQueryService()->listMasters();
+
+        $title = 'Список мастеров';
+        $bradCrumb[] = ['title' => $title, 'url' => 'masters'];
 
         $body = $this->twig->render('list.twig', [
+            'bradCrumb' => $bradCrumb,
             'title' => 'Список мастеров',
             'list' => $mastersList,
             'person' => 'master'
@@ -50,17 +45,22 @@ class MastersController extends AbstractController
      * @throws RuntimeError
      * @throws LoaderError
      */
-    public function newMaster(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function newMasterForm(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
         }
 
-        $lastPlaceList[] = ['url' => 'masters', 'name' => 'Список мастеров'];
+        $lastTitle = 'Список мастеров';
+        $newTitle = 'Новый мастер';
+        $bradCrumb = [
+            ['title' => $lastTitle, 'url' => 'masters'],
+            ['title' => $newTitle, 'url' => 'master/new']
+        ];
 
         $body = $this->twig->render('new_person.twig', [
-            'places' => $lastPlaceList,
-            'title' => 'Новый клиент',
+            'bradCrumb' => $bradCrumb,
+            'title' => $newTitle,
             'person' => 'master'
         ]);
         return $this->success($response, $body);
@@ -73,9 +73,10 @@ class MastersController extends AbstractController
         }
 
         $parsedFields = $request->getParsedBody();
-        $masterId = $this->masterTable->createMaster($parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
-        $body = "/master/edit?master_id=$masterId";
+        $params = new CreateMasterParams($parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
+        $masterId = MasterServiceProvider::getInstance()->getMasterService()->createMaster($params);
 
+        $body = "/master/edit?master_id=$masterId";
         return $this->redirect($response, $body);
     }
 
@@ -84,7 +85,7 @@ class MastersController extends AbstractController
      * @throws SyntaxError
      * @throws LoaderError
      */
-    public function editMaster(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function editMasterForm(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
@@ -97,14 +98,24 @@ class MastersController extends AbstractController
             return $this->badRequest($response);
         }
 
-        $lastPlaceList[] = ['url' => 'masters', 'name' => 'Список мастеров'];
+        $master = MasterServiceProvider::getInstance()->getMasterService()->getMaster((int)$masterId);
 
-        $appointments = $this->appointmentTable->getAllAppointments((int) $masterId, null);
+        if (is_null($master)) {
+            return $this->badRequest($response);
+        }
 
-        $master = $this->masterTable->findMaster((int)$masterId);
+        $lastTitle = 'Список мастеров';
+        $newTitle = 'Мастер';
+        $bradCrumb = [
+            ['url' => 'masters', 'title' => $lastTitle],
+            ['url' => "master/edit?master_id={$master->getId()}", 'title' => $newTitle]
+        ];
+
+        $appointments = AppointmentServiceProvider::getInstance()->getAppointmentQueryService()->listAppointments((int)$masterId, null);
+
         $body = $this->twig->render('edit_person.twig', [
-            'places' => $lastPlaceList,
-            'title' => 'Мастер',
+            'bradCrumb' => $bradCrumb,
+            'title' => $newTitle,
             'person' => 'master',
             'list' => $appointments,
             'person_id' => $master->getId(),
@@ -114,7 +125,6 @@ class MastersController extends AbstractController
             'created_at' => $master->getCreatedAt(),
             'updated_at' => $master->getUpdatedAt()
         ]);
-
         return $this->success($response, $body);
     }
 
@@ -132,10 +142,15 @@ class MastersController extends AbstractController
         }
 
         $parsedFields = $request->getParsedBody();
+        $editedMaster = MasterServiceProvider::getInstance()->getMasterService()->getMaster((int)$masterId);
+        if (is_null($editedMaster)) {
+            return $this->badRequest($response);
+        }
 
-        $this->masterTable->editMaster((int)$masterId, $parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
+        $params = new EditMasterParams((int)$masterId, $parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
+        MasterServiceProvider::getInstance()->getMasterService()->editMaster($params);
+
         $body = "/master/edit?master_id=$masterId";
-
         return $this->redirect($response, $body);
     }
 
@@ -152,11 +167,16 @@ class MastersController extends AbstractController
             return $this->badRequest($response);
         }
 
-        if (!$this->masterTable->deleteMaster((int)$masterId)) {
+        $editedMaster = MasterServiceProvider::getInstance()->getMasterService()->getMaster((int)$masterId);
+        if (is_null($editedMaster)) {
             return $this->badRequest($response);
         }
-        $body = "/masters";
 
+        if (!MasterServiceProvider::getInstance()->getMasterService()->deleteMaster((int)$masterId)) {
+            return $this->badRequest($response);
+        }
+
+        $body = "/masters";
         return $this->redirect($response, $body);
     }
 }

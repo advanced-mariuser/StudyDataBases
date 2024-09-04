@@ -19,9 +19,9 @@
         <img src="/img/logo.png" class="logo">
         <p class="header__name">Мега Плампер</p>
         <a class="header__home" href="/"><p>CRM</p></a>
-        {% for last_place in places %}
+        {% for lastPlace in bradCrumb %}
             <p class="header__separator">  >  </p>
-            <a class="header__last" href="/{{ last_place.url }}"><p>{{ last_place.name }}</p></a>
+            <a class="header__last" href="/{{ lastPlace.url }}"><p>{{ lastPlace.title }}</p></a>
         {% endfor %}
     </div>
 </header>

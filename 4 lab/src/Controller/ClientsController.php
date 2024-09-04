@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Database\AppointmentTable;
-use App\Database\ConnectionProvider;
-use App\Database\ClientTable;
+use App\Model\Data\Client\CreateClientParams;
+use App\Model\Data\Client\EditClientParams;
+use App\Model\Service\Appointment\AppointmentServiceProvider;
+use App\Model\Service\Client\ClientServiceProvider;
+use App\Model\Service\Master\MasterServiceProvider;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Twig\Error\LoaderError;
@@ -14,17 +16,6 @@ use Twig\Error\SyntaxError;
 
 class ClientsController extends AbstractController
 {
-    private ClientTable $clientTable;
-    private AppointmentTable $appointmentTable;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $connection = ConnectionProvider::connectDatabase();
-        $this->clientTable = new ClientTable($connection);
-        $this->appointmentTable = new AppointmentTable($connection);
-    }
-
     /**
      * @throws RuntimeError
      * @throws SyntaxError
@@ -35,10 +26,14 @@ class ClientsController extends AbstractController
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
         }
-        $clientsList = $this->clientTable->getAllClients();
+        $clientsList = ClientServiceProvider::getInstance()->getClientQueryService()->listClients();
+
+        $title = 'Список клиентов';
+        $bradCrumb[] = ['title' => $title, 'url' => 'clients'];
 
         $body = $this->twig->render('list.twig', [
-            'title' => 'Список клиентов',
+            'bradCrumb' => $bradCrumb,
+            'title' => $title,
             'list' => $clientsList,
             'person' => 'client'
         ]);
@@ -50,30 +45,37 @@ class ClientsController extends AbstractController
      * @throws RuntimeError
      * @throws LoaderError
      */
-    public function newClient(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function newClientForm(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
         }
 
-        $lastPlaceList[] = ['url' => 'clients', 'name' => 'Список клиентов'];
+        $lastTitle = 'Список клиентов';
+        $newTitle = 'Новый клиент';
+        $bradCrumb = [
+            ['title' => $lastTitle, 'url' => 'clients'],
+            ['title' => $newTitle, 'url' => 'client/new']
+        ];
 
         $body = $this->twig->render('new_person.twig', [
-            'places' => $lastPlaceList,
-            'title' => 'Новый клиент',
+            'bradCrumb' => $bradCrumb,
+            'title' => $newTitle,
             'person' => 'client'
         ]);
         return $this->success($response, $body);
     }
 
-    public function createClient(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function createClientForm(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isPost($request)) {
             return $this->badRequest($response);
         }
 
         $parsedFields = $request->getParsedBody();
-        $clientId = $this->clientTable->createClient($parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
+        $params = new CreateClientParams($parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
+        $clientId = ClientServiceProvider::getInstance()->getClientService()->createClient($params);
+
         $body = "/client/edit?client_id=$clientId";
 
         return $this->redirect($response, $body);
@@ -84,7 +86,7 @@ class ClientsController extends AbstractController
      * @throws SyntaxError
      * @throws LoaderError
      */
-    public function editClient(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function editClientForm(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         if (!$this->isGet($request)) {
             return $this->badRequest($response);
@@ -97,14 +99,24 @@ class ClientsController extends AbstractController
             return $this->badRequest($response);
         }
 
-        $lastPlaceList[] = ['url' => 'clients', 'name' => 'Список клиентов'];
+        $client = ClientServiceProvider::getInstance()->getClientService()->getClient((int)$clientId);
 
-        $appointments = $this->appointmentTable->getAllAppointments(null, (int) $clientId);
+        if (is_null($client)) {
+            return $this->badRequest($response);
+        }
 
-        $client = $this->clientTable->findClient((int)$clientId);
+        $lastTitle = 'Список клиентов';
+        $newTitle = 'Клиент';
+        $bradCrumb = [
+            ['url' => 'clients', 'title' => $lastTitle],
+            ['url' => "client/edit?client_id={$client->getId()}", 'title' => $newTitle]
+        ];
+
+        $appointments = AppointmentServiceProvider::getInstance()->getAppointmentQueryService()->listAppointments(null, (int)$clientId);
+
         $body = $this->twig->render('edit_person.twig', [
-            'places' => $lastPlaceList,
-            'title' => 'Клиент',
+            'bradCrumb' => $bradCrumb,
+            'title' => $newTitle,
             'person' => 'client',
             'list' => $appointments,
             'person_id' => $client->getId(),
@@ -132,31 +144,17 @@ class ClientsController extends AbstractController
         }
 
         $parsedFields = $request->getParsedBody();
+        $editedClient = ClientServiceProvider::getInstance()->getClientService()->getClient((int)$clientId);
 
-        $this->clientTable->editClient((int)$clientId, $parsedFields['first_name'], $parsedFields['last_name'], $parsedFields['phone']);
-        $body = "/client/edit?client_id=$clientId";
-
-        return $this->redirect($response, $body);
-    }
-
-    public function deleteClient(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        if (!$this->isPost($request)) {
+        if (is_null($editedClient)) {
             return $this->badRequest($response);
         }
 
-        $queryParams = $request->getQueryParams();
-        $clientId = $queryParams['client_id'] ?? null;
+        $params = new EditClientParams((int)$clientId, $parsedFields['first_name'], $parsedFields['last_name'],
+            $parsedFields['phone']);
+        ClientServiceProvider::getInstance()->getClientService()->editClient($params);
 
-        if (is_null($clientId)) {
-            return $this->badRequest($response);
-        }
-
-        if (!$this->clientTable->deleteClient((int)$clientId)) {
-            return $this->badRequest($response);
-        }
-        $body = "/clients";
-
+        $body = "/client/edit?client_id={$editedClient->getId()}";
         return $this->redirect($response, $body);
     }
 }

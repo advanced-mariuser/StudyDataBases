@@ -1,1 +1,1 @@
-{"version":1,"defects":{"App\\Tests\\Sandbox\\SumNumbersTest::testUploadPaths":7},"times":{"App\\Tests\\Sandbox\\SumNumbersTest::testUploadPaths":0.007}}
+{"version":1,"defects":{"App\\Tests\\Sandbox\\SumNumbersTest::testUploadPaths":7,"App\\Tests\\Functional\\MasterControllerTest::testCreateEditAndDeleteMaster":8},"times":{"App\\Tests\\Sandbox\\SumNumbersTest::testUploadPaths":0.007}}
